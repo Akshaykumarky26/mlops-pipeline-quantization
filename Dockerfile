@@ -12,5 +12,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY train.py .
 COPY predict.py .
+COPY linear_regression_model.joblib .
 
 CMD ["python", "predict.py"]
