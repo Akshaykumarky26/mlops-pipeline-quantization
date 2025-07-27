@@ -11,6 +11,6 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY train.py .
-COPY predict.py . # This will be created in the next step
+COPY predict.py .
 
 CMD ["python", "predict.py"]
