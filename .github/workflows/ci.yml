@@ -8,31 +8,29 @@ on:
 jobs:
   build_and_test_container:
     runs-on: ubuntu-latest
-    steps:
+    steps: # This 'steps:' needs to be indented two spaces from 'runs-on:'
       - name: Checkout repository code
-        [cite_start]uses: actions/checkout@v4 # [cite: 48]
+        uses: actions/checkout@v4
 
       - name: Set up Python environment and install dependencies
         uses: actions/setup-python@v5
         with:
-          python-version: '3.9' # Use the same Python version as in your Dockerfile
-      - [cite_start]run: pip install -r requirements.txt # [cite: 49]
+          python-version: '3.9'
+      - run: pip install -r requirements.txt
 
       - name: Run train.py to generate model file
-        [cite_start]run: python train.py # [cite: 50]
-        # This will create linear_regression_model.joblib in the workspace
+        run: python train.py
 
       - name: Build Docker image
-        run: docker build -t mlops-quantization-model . [cite_start]# [cite: 51]
-        # -t tags your image. Use a descriptive name.
+        run: docker build -t mlops-quantization-model .
 
       - name: Run Docker container for verification
-        [cite_start]run: docker run mlops-quantization-model python predict.py # [cite: 52, 53]
+        run: docker run mlops-quantization-model python predict.py
 
   push_to_dockerhub:
-    needs: build_and_test_container # This job runs only after the build_and_test_container job succeeds
+    needs: build_and_test_container
     runs-on: ubuntu-latest
-    steps:
+    steps: # This 'steps:' also needs correct indentation
       - name: Checkout repository code
         uses: actions/checkout@v4
 
@@ -50,11 +48,9 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-          # Store DOCKER_USERNAME and DOCKER_PASSWORD as repository secrets in GitHub
 
       - name: Build Docker image for push
         run: docker build -t ${{ secrets.DOCKER_USERNAME }}/mlops-quantization-model:latest .
-        # Tag with your Docker Hub username and image name
 
       - name: Push Docker image to Docker Hub
-        [cite_start]run: docker push ${{ secrets.DOCKER_USERNAME }}/mlops-quantization-model:latest # [cite: 54]
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/mlops-quantization-model:latest
