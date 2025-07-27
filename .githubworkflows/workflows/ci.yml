@@ -1,0 +1,60 @@
+name: MLOps CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - docker_ci # This workflow will trigger on pushes to the 'docker_ci' branch
+
+jobs:
+  build_and_test_container:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository code
+        [cite_start]uses: actions/checkout@v4 # [cite: 48]
+
+      - name: Set up Python environment and install dependencies
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9' # Use the same Python version as in your Dockerfile
+      - [cite_start]run: pip install -r requirements.txt # [cite: 49]
+
+      - name: Run train.py to generate model file
+        [cite_start]run: python train.py # [cite: 50]
+        # This will create linear_regression_model.joblib in the workspace
+
+      - name: Build Docker image
+        run: docker build -t mlops-quantization-model . [cite_start]# [cite: 51]
+        # -t tags your image. Use a descriptive name.
+
+      - name: Run Docker container for verification
+        [cite_start]run: docker run mlops-quantization-model python predict.py # [cite: 52, 53]
+
+  push_to_dockerhub:
+    needs: build_and_test_container # This job runs only after the build_and_test_container job succeeds
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository code
+        uses: actions/checkout@v4
+
+      - name: Set up Python environment (again for the model generation if needed, or if separated)
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+      - run: pip install -r requirements.txt
+
+      - name: Run train.py to generate model file (needed before building image to include model)
+        run: python train.py
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          # Store DOCKER_USERNAME and DOCKER_PASSWORD as repository secrets in GitHub
+
+      - name: Build Docker image for push
+        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/mlops-quantization-model:latest .
+        # Tag with your Docker Hub username and image name
+
+      - name: Push Docker image to Docker Hub
+        [cite_start]run: docker push ${{ secrets.DOCKER_USERNAME }}/mlops-quantization-model:latest # [cite: 54]
